@@ -28,7 +28,7 @@ namespace Cinema_Booking_System
 
         static string Menu(Dictionary<string, int> ticketsSold)
         {
-            string menuLayout = "Welcome to Aquinas Multiplex                   \n"+
+            string menuLayout = "Welcome to Aquinas Multiplex                   \n"+ 
                                 "We are presently showing:                      \n"+
                                 "1. Rush (15) Tickets Sold: {0}                 \n"+
                                 "2. How I Live Now (15) Tickets Sold: {1}       \n"+
