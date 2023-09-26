@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Net;
+using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -29,6 +31,40 @@ namespace Cinema_Booking_System
             ageRating.Add("filth", 18);
             ageRating.Add("planes", 0);
 
+            Dictionary<string, List<List<string>>> seatingArrangements = new Dictionary<string, List<List<string>>>();
+            for (int movieNum = 1; movieNum <=5; movieNum++)
+            {
+             
+                List<string> movieList = new List<string> {"rush","hiln","thor","filth","planes"};
+                string movie = movieList[movieNum - 1];
+
+                seatingArrangements.Add(movie, new List<List<string>> {});
+
+                for (int row = 1; row <= 5; row++)
+                {
+                    seatingArrangements[movie].Add(new List<string> {});
+                    for (int column = 1; column <= 9; column++)
+                    {
+                        Random rng = new Random();
+                        int randomNum = rng.Next(1, 10 + 1);
+                        Console.WriteLine(randomNum);
+
+                        if (randomNum <= 4)
+                        {
+                            seatingArrangements[movie][row].Add("X");
+                        }
+                        else 
+                        {
+                            seatingArrangements[movie][row].Add("O");
+                        }
+
+                    }
+
+                    Console.WriteLine(seatingArrangements[movie]);
+
+                }
+            }
+
             /*------------------------------------------------------*/
             
             RESTART: Console.Clear();
@@ -47,7 +83,7 @@ namespace Cinema_Booking_System
 
             Console.Write("Enter your age: ");
             int age = (int) Validate(Console.ReadLine(), "System.Int32", "Enter a number: ");
-            bool validAge = AgeCheck(age, ageRating.ElementAt(option-1).Value, 117);
+            bool validAge = AgeCheck(age, ageRating.ElementAt(option-1).Value, 116);
 
             if (!validAge) { goto RESTART; }
 
