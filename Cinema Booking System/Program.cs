@@ -18,6 +18,9 @@ namespace Cinema_Booking_System
             /* Variables                                            */
             /*------------------------------------------------------*/
 
+            double adultPrice = 7.00;
+            double childPrice = adultPrice / 2;
+
             Dictionary <string, int> ticketsSold = new Dictionary<string, int>(); /* Tickets Sold Dictionary */
             ticketsSold.Add("rush", 0);
             ticketsSold.Add("hiln", 0);
@@ -32,6 +35,8 @@ namespace Cinema_Booking_System
             ageRating.Add("filth", 18);
             ageRating.Add("planes", 0);
 
+            Dictionary<string, List<List<string>>> seatingArrangementsSaveState = new Dictionary<string, List<List<string>>>();
+
             Dictionary<string, List<List<string>>> seatingArrangements = new Dictionary<string, List<List<string>>>();
 
             Random rng = new Random();
@@ -43,10 +48,13 @@ namespace Cinema_Booking_System
                 string movie = movieList[movieNum - 1];
 
                 seatingArrangements.Add(movie, new List<List<string>> {});
+                seatingArrangementsSaveState.Add(movie, new List<List<string>> { });
 
                 for (int row = 1; row <= 5; row++)
                 {
                     seatingArrangements[movie].Add(new List<string> {});
+                    seatingArrangementsSaveState[movie].Add(new List<string> { });
+
                     for (int column = 1; column <= 9; column++)
                     {
                         int randomNum = rng.Next(1, 10 + 1);
@@ -54,50 +62,138 @@ namespace Cinema_Booking_System
                         if (randomNum <= 4)
                         {
                             seatingArrangements[movie][row-1].Add("X");
+                            seatingArrangementsSaveState[movie][row-1].Add("X");
                         }
                         else 
                         {
                             seatingArrangements[movie][row-1].Add("O");
+                            seatingArrangementsSaveState[movie][row-1].Add("O");
                         }
                     }
                 }
             }
 
             /*------------------------------------------------------*/
-            
+
             RESTART: Console.Clear();
 
             /*------------------------------------------------------*/
             /* Main Program                                         */
             /*------------------------------------------------------*/
 
+            int numBooking = (int) DeclareInput("How many are being booked for? ", "System.Int32", "Enter a number: ");
+
+            ClearLines(1);
+
             Console.WriteLine(Menu(ticketsSold));
 
             int option = (int)DeclareInput("Enter the number of the film you wish to see: ", "System.Int32", "Enter a number: ");
             option = RangeCheck(option, 1, 5);
 
+            Console.Clear();
+
+            int emptySeats = WriteSeats(seatingArrangements, option, true).Replace("X", "").Length;
+
+            if (numBooking > emptySeats)
+            {
+                Console.WriteLine("Access denied – Too many people");
+                Console.ReadLine();
+                goto RESTART;
+            }
+
+            List<int> ageList = new List<int>();
+
+            for (int person = 1; person <= numBooking; person++)
+            {
+                string agePrompt = $"Enter Person {person}'s age: ";
+                if (numBooking == 1) { agePrompt = "Enter your age: "; }
+
+                int age = (int)DeclareInput(agePrompt, "System.Int32", "Enter a number");
+                bool validAge = AgeCheck(age, ageRating.ElementAt(option - 1).Value, 116);
+
+                if (!validAge) { goto RESTART; }
+
+                ageList.Add(age);
+                ClearLines(1);
+            }
+
+            Console.WriteLine(WriteSeats(seatingArrangements, option, true));
+
+            List<List<int>> chosenSeats = new List<List<int>>();
+
+            for (int person = 1; person <= numBooking; person++)
+            {
+                chosenSeats.Add(new List<int>());
+
+                string seatPrompt = $"Please enter the row and column where Person {person} wants to sit ?";
+                if (numBooking == 1) { seatPrompt = "Please enter the row and column where you want to sit ?"; }
+
+                Console.WriteLine(seatPrompt);
+                int userRow;
+                int userColumn;
+
+                bool firstPass = true;
+                do
+                {
+                    if (firstPass == false)
+                    {
+                        ClearLines(2);
+                        Console.WriteLine("Sorry, this seat is occupied");
+                    }
+
+                    userRow = (int)DeclareInput("Row: ", "System.Int32", "Enter a number: ");
+                    userRow = RangeCheck(userRow, 1, 5);
+
+                    userColumn = (int)DeclareInput("Column: ", "System.Int32", "Enter a number: ");
+                    userColumn = RangeCheck(userColumn, 1, 9);
+
+                    firstPass = false;
+
+                } while (seatingArrangements.ElementAt(option - 1).Value[userRow - 1][userColumn - 1] == "X");
+
+                chosenSeats[person - 1].Add(userRow);
+                chosenSeats[person - 1].Add(userColumn);
+
+                seatingArrangements.ElementAt(option - 1).Value[userRow - 1][userColumn - 1] = "X";
+
+                ClearLines(11);
+                Console.WriteLine(WriteSeats(seatingArrangements, option, true));
+            }
+
+            ClearLines(8);
+
+            DateTime date = (DateTime) DeclareInput("What date: ", "System.DateTime", "Enter in the format dd/mm/yyyy");
+
+            if  ( (date - DateTime.Today > DateTime.Now.AddDays(7) - DateTime.Now) || (date < DateTime.Today) )
+            {
+                Console.WriteLine("Access denied – date is invalid");
+                Console.ReadLine();
+                seatingArrangements = seatingArrangementsSaveState;
+                goto RESTART;
+            }
+
             ClearLines(1);
 
-            int age = (int)DeclareInput("Enter your age: ", "System.Int32", "Enter a number");
-            bool validAge = AgeCheck(age, ageRating.ElementAt(option-1).Value, 116);
-
-            if (!validAge) { goto RESTART; }
-
-            Console.Write("\n");
-            WriteSeats(seatingArrangements, option);
-
-            Console.WriteLine("Please enter the row and column where you want to sit ?");
-
-            do
+            string seatsString = "";
+            for (int person = 1 - 1; person <= numBooking - 1; person++)
             {
-                int userRow = (int)DeclareInput("Row: ", "System.Int32", "Enter a number: ");
-                userRow = RangeCheck(userRow, 1, 5);
+                seatsString += chosenSeats[person][0] + ",";
+                seatsString += chosenSeats[person][1] + " : ";
+            }
 
-                int userColumn = (int)DeclareInput("Column: ", "System.Int32", "Enter a number: ");
-                userColumn = RangeCheck(userColumn, 1, 9);
-            } while (seatingArrangements.ElementAt(option - 1).Value[row - 1][column - 1])
+            Console.Write("--------------------" + "\n"                                    +
+                              "Aquinas Multiplex\n"                                            +
+                              "Film : " + seatingArrangements.ElementAt(option - 1).Key + "\n" +
+                              "Date : " + date.ToShortDateString() + "\n"                      +
+                              "Seats : " + seatsString + "\n\n"                                +
+                              "Enjoy the film" + "\n"                                          +
+                              "--------------------"                                           );
+
+            Console.ReadLine();
+
+            seatingArrangementsSaveState = seatingArrangements;
+            goto RESTART;
             
-
             /*------------------------------------------------------*/
 
         }
@@ -115,22 +211,26 @@ namespace Cinema_Booking_System
             return string.Format(menuLayout, ticketsSold["rush"], ticketsSold["hiln"], ticketsSold["thor"], ticketsSold["filth"], ticketsSold["planes"]);
         }
 
-        static void WriteSeats(Dictionary<string, List<List<string>>> seatingArrangements, int option)
+        static string WriteSeats(Dictionary<string, List<List<string>>> seatingArrangements, int option, bool toPrint)
         {
-            Console.WriteLine("  123456789");
+            string seatString = ""; 
+            
+            if (toPrint) { seatString += "  123456789\n"; }
 
             for (int row = 1; row <= 5; row++)
             {
-                Console.Write(row + " ");
+                if (toPrint) { seatString += row + " "; }
 
                 for (int column = 1; column <= 9; column++)
                 {
-                    Console.Write(seatingArrangements.ElementAt(option - 1).Value[row - 1][column - 1]);
+                    seatString += seatingArrangements.ElementAt(option - 1).Value[row - 1][column - 1];
                 }
-                Console.Write("\n");
+                if (toPrint) { seatString += "\n"; }
             }
 
-            Console.Write("\n");
+            if (toPrint) { seatString += "\n"; }
+
+            return seatString;
         }
 
         static void ClearLines(int numLines)
