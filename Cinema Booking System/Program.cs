@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Net;
 using System.Reflection.Emit;
@@ -32,6 +33,9 @@ namespace Cinema_Booking_System
             ageRating.Add("planes", 0);
 
             Dictionary<string, List<List<string>>> seatingArrangements = new Dictionary<string, List<List<string>>>();
+
+            Random rng = new Random();
+
             for (int movieNum = 1; movieNum <=5; movieNum++)
             {
              
@@ -45,7 +49,6 @@ namespace Cinema_Booking_System
                     seatingArrangements[movie].Add(new List<string> {});
                     for (int column = 1; column <= 9; column++)
                     {
-                        Random rng = new Random();
                         int randomNum = rng.Next(1, 10 + 1);
 
                         if (randomNum <= 4)
@@ -70,26 +73,30 @@ namespace Cinema_Booking_System
 
             Console.WriteLine(Menu(ticketsSold));
 
-            Console.Write("Enter the number of the film you wish to see: ");
-            int option = (int) Validate(Console.ReadLine(), "System.Int32", "Enter a number: ");
+            int option = (int)DeclareInput("Enter the number of the film you wish to see: ", "System.Int32", "Enter a number: ");
             option = RangeCheck(option, 1, 5);
 
             ClearLines(1);
 
-            Console.Write("Enter your age: ");
-            int age = (int) Validate(Console.ReadLine(), "System.Int32", "Enter a number: ");
+            int age = (int)DeclareInput("Enter your age: ", "System.Int32", "Enter a number");
             bool validAge = AgeCheck(age, ageRating.ElementAt(option-1).Value, 116);
 
             if (!validAge) { goto RESTART; }
 
-            for (int row = 1; row <=5; row++)
+            Console.Write("\n");
+            WriteSeats(seatingArrangements, option);
+
+            Console.WriteLine("Please enter the row and column where you want to sit ?");
+
+            do
             {
-                for (int column = 1; column <=9; column++)
-                {
-                    Console.Write(seatingArrangements.ElementAt(option - 1).Value[row - 1][column-1]);
-                }
-                Console.Write("\n");
-            }
+                int userRow = (int)DeclareInput("Row: ", "System.Int32", "Enter a number: ");
+                userRow = RangeCheck(userRow, 1, 5);
+
+                int userColumn = (int)DeclareInput("Column: ", "System.Int32", "Enter a number: ");
+                userColumn = RangeCheck(userColumn, 1, 9);
+            } while (seatingArrangements.ElementAt(option - 1).Value[row - 1][column - 1])
+            
 
             /*------------------------------------------------------*/
 
@@ -108,15 +115,33 @@ namespace Cinema_Booking_System
             return string.Format(menuLayout, ticketsSold["rush"], ticketsSold["hiln"], ticketsSold["thor"], ticketsSold["filth"], ticketsSold["planes"]);
         }
 
+        static void WriteSeats(Dictionary<string, List<List<string>>> seatingArrangements, int option)
+        {
+            Console.WriteLine("  123456789");
+
+            for (int row = 1; row <= 5; row++)
+            {
+                Console.Write(row + " ");
+
+                for (int column = 1; column <= 9; column++)
+                {
+                    Console.Write(seatingArrangements.ElementAt(option - 1).Value[row - 1][column - 1]);
+                }
+                Console.Write("\n");
+            }
+
+            Console.Write("\n");
+        }
+
         static void ClearLines(int numLines)
         {
-            for (int linesCleared = 0; linesCleared <= numLines; linesCleared++)
+            for (int linesCleared = 0; linesCleared < numLines; linesCleared++)
             {
-                Console.SetCursorPosition(0, Console.CursorTop -1);
+                Console.SetCursorPosition(0, Console.CursorTop);
+                Console.SetCursorPosition(0, Console.CursorTop - (Console.WindowWidth >= Console.BufferWidth ? 1 : 0));
                 Console.Write(new string(' ', Console.WindowWidth));
-                Console.SetCursorPosition(0, Console.CursorTop -1);
+                Console.SetCursorPosition(0, Console.CursorTop - (Console.WindowWidth >= Console.BufferWidth ? 1 : 0));
             }
-            Console.Write("\n");
         }
 
         static int RangeCheck(int num, int Min, int Max)
@@ -174,6 +199,17 @@ namespace Cinema_Booking_System
                 }
             }
             return input;
+        }
+
+        static object DeclareInput(string prompt, string targetType, string errorMessage)
+        {
+            Type type = Type.GetType(targetType);
+
+            Console.Write(prompt);
+
+            object variable = Convert.ChangeType(Validate(Console.ReadLine(), targetType, errorMessage), type);
+
+            return variable;
         }
     }
 }
