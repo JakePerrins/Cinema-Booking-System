@@ -47,21 +47,16 @@ namespace Cinema_Booking_System
                     {
                         Random rng = new Random();
                         int randomNum = rng.Next(1, 10 + 1);
-                        Console.WriteLine(randomNum);
 
                         if (randomNum <= 4)
                         {
-                            seatingArrangements[movie][row].Add("X");
+                            seatingArrangements[movie][row-1].Add("X");
                         }
                         else 
                         {
-                            seatingArrangements[movie][row].Add("O");
+                            seatingArrangements[movie][row-1].Add("O");
                         }
-
                     }
-
-                    Console.WriteLine(seatingArrangements[movie]);
-
                 }
             }
 
@@ -86,6 +81,15 @@ namespace Cinema_Booking_System
             bool validAge = AgeCheck(age, ageRating.ElementAt(option-1).Value, 116);
 
             if (!validAge) { goto RESTART; }
+
+            for (int row = 1; row <=5; row++)
+            {
+                for (int column = 1; column <=9; column++)
+                {
+                    Console.Write(seatingArrangements.ElementAt(option - 1).Value[row - 1][column-1]);
+                }
+                Console.Write("\n");
+            }
 
             /*------------------------------------------------------*/
 
